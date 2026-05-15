@@ -1,0 +1,4 @@
+COLOUR_01 = fcdc00 //primary
+COLOUR_02 = f83c19 //secondary
+COLOUR_03 = 061638 //background
+COLOUR_04 = 287eef //hover
