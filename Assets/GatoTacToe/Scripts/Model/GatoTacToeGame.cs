@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-namespace TicTacToe.Model
+namespace GatoTacToe.Model
 {
     public enum GameState
     {
