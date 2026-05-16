@@ -3,125 +3,117 @@ using System.Collections.Generic;
 
 namespace GatoTacToe.Model
 {
-    public enum GameState
-    {
-        ONGOING,
-        PLAYER1_WINS,
-        PLAYER2_WINS,
-        DRAW
-    }
+    public enum GameState { ONGOING, PLAYER1_WINS, PLAYER2_WINS, DRAW }
 
     public class TicTacToeGame
     {
-        // --- Data as per pseudocode ---
+        private readonly int gridSize;
+        private int[] grid;
         private List<int> moveQueue = new List<int>();
         private bool isPlayer1Turn = true;
-        private int[] grid = new int[9];   // 0 empty, 1 = Player1, 2 = Player2
-
-        // Timing (using simple float timestamps, no Stopwatch needed)
         private float turnStartTime;
-        private float totalTimePlayer1 = 0f;
-        private float totalTimePlayer2 = 0f;
-
+        private float totalTimePlayer1, totalTimePlayer2;
         public GameState CurrentState { get; private set; }
 
-        public TicTacToeGame()
+        public TicTacToeGame(int size)
         {
+            gridSize = size;
+            grid = new int[size * size];
             ResetGame();
         }
 
         public void ResetGame()
         {
-            // Clear grid
-            for (int i = 0; i < 9; i++) grid[i] = 0;
+            for (int i = 0; i < grid.Length; i++) grid[i] = 0;
             moveQueue.Clear();
             isPlayer1Turn = true;
-            totalTimePlayer1 = 0f;
-            totalTimePlayer2 = 0f;
+            totalTimePlayer1 = totalTimePlayer2 = 0f;
             CurrentState = GameState.ONGOING;
-
-            // Start the timer for the first player's turn
             turnStartTime = Time.realtimeSinceStartup;
         }
 
-        /// <summary>
-        /// Play a turn at given coordinate (0-8). Assumes coordinate is valid and cell empty.
-        /// Returns the game state after the move (ONGOING, or terminal state).
-        /// </summary>
         public GameState PlayTurn(int coordinate)
         {
-            // 1. Stop timer and add elapsed time to current player
             float elapsed = Time.realtimeSinceStartup - turnStartTime;
-            if (isPlayer1Turn)
-                totalTimePlayer1 += elapsed;
-            else
-                totalTimePlayer2 += elapsed;
+            if (isPlayer1Turn) totalTimePlayer1 += elapsed;
+            else totalTimePlayer2 += elapsed;
 
-            // 2. Place mark
             grid[coordinate] = isPlayer1Turn ? 1 : 2;
             moveQueue.Add(coordinate);
 
-            // 3. Check game over
             CurrentState = CheckGameOver();
 
-            // 4. If game continues, switch turn and restart timer
             if (CurrentState == GameState.ONGOING)
             {
-                // Switch player
                 isPlayer1Turn = !isPlayer1Turn;
-                // Reset and start timer for next player
                 turnStartTime = Time.realtimeSinceStartup;
             }
-
-            // 5. Return the current state (as required)
             return CurrentState;
         }
 
-        // Exactly your pseudocode's check_game_over (with fix for diagonal)
+        private GameState Winner()
+        {
+            return isPlayer1Turn ? GameState.PLAYER1_WINS : GameState.PLAYER2_WINS;
+        }
+
         private GameState CheckGameOver()
         {
-           
-            if ( (grid[0] != 0 && grid[0] == grid[1] && grid[1] == grid[2]) || 
-                 (grid[3] != 0 && grid[3] == grid[4] && grid[4] == grid[5]) || 
-                 (grid[6] != 0 && grid[6] == grid[7] && grid[7] == grid[8]) || 
-                 (grid[0] != 0 && grid[0] == grid[3] && grid[3] == grid[6]) || 
-                 (grid[1] != 0 && grid[1] == grid[4] && grid[4] == grid[7]) || 
-                 (grid[2] != 0 && grid[2] == grid[5] && grid[5] == grid[8]) || 
-                 (grid[0] != 0 && grid[0] == grid[4] && grid[4] == grid[8]) || 
-                 (grid[2] != 0 && grid[2] == grid[4] && grid[4] == grid[6]) )
-            {
-                return isPlayer1Turn ? GameState.PLAYER1_WINS : GameState.PLAYER2_WINS;
-            }
+            int n = gridSize;
 
-            // Draw check – any zero left?
-            bool isFull = true;
-            for (int i = 0; i < 9; i++)
+            // Rows
+            for (int row = 0; row < n; row++)
             {
-                if (grid[i] == 0)
+                int first = grid[row * n];
+                if (first != 0)
                 {
-                    isFull = false;
-                    break;
+                    int col = 1;
+                    while (col < n && grid[row * n + col] == first) col++;
+                    if (col == n) return Winner();
                 }
             }
-            if (isFull) return GameState.DRAW;
+
+            // Columns
+            for (int col = 0; col < n; col++)
+            {
+                int first = grid[col];
+                if (first != 0)
+                {
+                    int row = 1;
+                    while (row < n && grid[row * n + col] == first) row++;
+                    if (row == n) return Winner();
+                }
+            }
+
+            // Main diagonal (top-left to bottom-right)
+            int mainFirst = grid[0];
+            if (mainFirst != 0)
+            {
+                int i = 1;
+                while (i < n && grid[i * n + i] == mainFirst) i++;
+                if (i == n) return Winner();
+            }
+
+            // Anti-diagonal (top-right to bottom-left)
+            int antiFirst = grid[n - 1];
+            if (antiFirst != 0)
+            {
+                int i = 1;
+                while (i < n && grid[i * n + (n - 1 - i)] == antiFirst) i++;
+                if (i == n) return Winner();
+            }
+
+            // Draw check
+            int idx = 0;
+            while (idx < grid.Length && grid[idx] != 0) idx++;
+            if (idx == grid.Length) return GameState.DRAW;
 
             return GameState.ONGOING;
         }
 
-        // ----- Statistics getters (for persistence) -----
         public float GetPlayer1TotalTime() => totalTimePlayer1;
         public float GetPlayer2TotalTime() => totalTimePlayer2;
-
-        public int GetPlayer1MoveCount()
-        {
-            if (moveQueue.Count == 0) return 0;
-            return (moveQueue.Count + 1) / 2;
-        }
-
-        public int GetPlayer2MoveCount()
-        {
-            return moveQueue.Count / 2;
-        }
+        public int GetPlayer1MoveCount() => moveQueue.Count == 0 ? 0 : (moveQueue.Count + 1) / 2;
+        public int GetPlayer2MoveCount() => moveQueue.Count / 2;
+        public bool IsPlayer1Turn => isPlayer1Turn;
     }
-
 }
