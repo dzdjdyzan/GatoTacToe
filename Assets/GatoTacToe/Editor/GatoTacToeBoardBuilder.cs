@@ -60,19 +60,6 @@ public class GatoTacToeBoardBuilder
         {
             GameObject cell = (GameObject)PrefabUtility.InstantiatePrefab(cellPrefab, cellsContainer.transform);
             cell.name = $"Cell_{i}";
-
-            Image img = cell.GetComponent<Image>();
-            if (img) img.color = GatoTacToeConfig.cellNormalColor;
-
-            Button btn = cell.GetComponent<Button>();
-            if (btn)
-            {
-                ColorBlock colors = btn.colors;
-                colors.normalColor = GatoTacToeConfig.cellNormalColor;
-                colors.highlightedColor = GatoTacToeConfig.cellHighlightColor;
-                colors.pressedColor = GatoTacToeConfig.cellPressedColor;
-                btn.colors = colors;
-            }
         }
 
         // LinesContainer

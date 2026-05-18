@@ -3,8 +3,8 @@ using UnityEngine;
 public static class GatoTacToeConfig
 {
     public static int gridSize = 3;
-    public static float metallicRatio = 4.236f;
-    public static float baseUnit = 24f;
+    public static float metallicRatio = 3.303f;
+    public static float baseUnit = 96f;
     
     public static Color lineColor = new Color(0.96f, 0.55f, 0.13f, 0.8f);
     public static Color cellNormalColor = Color.clear;
