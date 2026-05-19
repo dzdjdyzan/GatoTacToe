@@ -1,4 +1,24 @@
+MATTISSE CAT FISH THEME
+
 COLOUR_01 = fcdc00 //primary
 COLOUR_02 = f83c19 //secondary
 COLOUR_03 = 061638 //background
 COLOUR_04 = 287eef //hover
+
+background colour hex: 6, 22, 56, 255
+cell highlighted and pressed colour hex: 41, 125, 240, 152
+mark o tmp vertex colour hex: 248, 60, 25, 255
+mark o tmp distance field shader outline colour rgba:  248, 60, 70, 255
+mark o tmp distance field shader glow colour rgba: 248, 60, 25, 128
+mark x tmp vertex colour hex: FCDC00 255, 220, 0, 255
+mark o tmp distance field shader outline colour rgba:  252, 220, 0, 255
+mark o tmp distance field shader glow colour rgba: 252, 220, 0, 128
+grid line image color: 255, 129, 0, 255
+GlowLine_material color: 255, 129, 0, 255
+
+3x3 grid scaling factors:
+
+public static int gridSize = 3;
+public static float metallicRatio = 3.303f;
+public static float baseUnit = 96f;
+public static float markFontScale = 0.6f;
