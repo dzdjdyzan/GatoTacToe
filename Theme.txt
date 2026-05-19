@@ -5,12 +5,12 @@ COLOUR_02 = f83c19 //secondary
 COLOUR_03 = 061638 //background
 COLOUR_04 = 287eef //hover
 
-background colour hex: 6, 22, 56, 255
-cell highlighted and pressed colour hex: 41, 125, 240, 152
-mark o tmp vertex colour hex: 248, 60, 25, 255
+background colour rgba: 6, 22, 56, 255
+cell highlighted and pressed colour rgba: 41, 125, 240, 152
+mark o tmp vertex colour rgba: 248, 60, 25, 255
 mark o tmp distance field shader outline colour rgba:  248, 60, 70, 255
 mark o tmp distance field shader glow colour rgba: 248, 60, 25, 128
-mark x tmp vertex colour hex: FCDC00 255, 220, 0, 255
+mark x tmp vertex colour: 255, 220, 0, 255
 mark o tmp distance field shader outline colour rgba:  252, 220, 0, 255
 mark o tmp distance field shader glow colour rgba: 252, 220, 0, 128
 grid line image color: 255, 129, 0, 255

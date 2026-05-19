@@ -4,12 +4,16 @@ using GatoTacToe.Model; // your model namespace
 public class GatoTacToeController : MonoBehaviour  
 {
      public BoardView boardView; // assign in Inspector
-    private TicTacToeGame gameModel;
+    private GatoTacToeGame gameModel;
     private float gameStartTime;
+
+    void Awake()
+    {
+        gameModel = new GatoTacToeGame(GatoTacToeConfig.gridSize);
+    }
 
     void Start()
     {
-        gameModel = new TicTacToeGame(GatoTacToeConfig.gridSize);
         boardView.SetClickCallback(OnCellClicked);
         StartNewGame();
     }
@@ -19,7 +23,6 @@ public class GatoTacToeController : MonoBehaviour
         gameModel.ResetGame();
         boardView.ResetBoard();
         gameStartTime = Time.realtimeSinceStartup;
-        // Optionally update UI turn text here
     }
 
     void OnCellClicked(int cellIndex)
@@ -46,4 +49,6 @@ public class GatoTacToeController : MonoBehaviour
             Invoke(nameof(StartNewGame), 2f);
         }
     }
+
+    public GatoTacToeGame GetGame() => gameModel;
 }

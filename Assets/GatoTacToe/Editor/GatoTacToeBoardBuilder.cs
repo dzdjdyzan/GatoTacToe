@@ -1,38 +1,74 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEditor;
+using TMPro;
 
 public class GatoTacToeBoardBuilder
 {
+    // Scaling factors
+    private static int gridSize = 3;
+    private static float metallicRatio = 3.303f;
+    private static float baseUnit = 96f;
+    private static float markFontScale = 0.6f;
+
     [MenuItem("Tools/Build GatoTacToe Board")]
     private static void BuildBoard()
     {
         Canvas canvas = GameObject.Find("GameCanvas")?.GetComponent<Canvas>();
         if (canvas == null)
         {
-            Debug.LogError("No Canvas in scene. Create a Canvas first.");
+            Debug.LogError("No Canvas named 'GameCanvas' found.");
             return;
         }
 
-        // Adjust these paths to match your prefab locations
+        // ----- 1. Background -----
+        Transform bgTransform = canvas.transform.Find("Background");
+        if (bgTransform != null)
+            bgTransform.GetComponent<Image>().color = Theme.backgroundColor;
+        else
+        {
+            GameObject bg = new GameObject("Background", typeof(RectTransform), typeof(Image));
+            bg.transform.SetParent(canvas.transform, false);
+            RectTransform bgRect = bg.GetComponent<RectTransform>();
+            bgRect.anchorMin = Vector2.zero;
+            bgRect.anchorMax = Vector2.one;
+            bgRect.offsetMin = bgRect.offsetMax = Vector2.zero;
+            bg.GetComponent<Image>().color = Theme.backgroundColor;
+        }
+
+        // ----- 2. Load all prefabs and material -----
         GameObject cellPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/GatoTacToe/Prefabs/Cell.prefab");
+        GameObject horizontalLinePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/GatoTacToe/Prefabs/HorizontalLine.prefab");
+        GameObject verticalLinePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/GatoTacToe/Prefabs/VerticalLine.prefab");
         GameObject markXPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/GatoTacToe/Prefabs/Mark_X.prefab");
         GameObject markOPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/GatoTacToe/Prefabs/Mark_O.prefab");
+        Material glowMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/GatoTacToe/UI/Materials/GlowLine_Material.mat");
 
-        if (cellPrefab == null || markXPrefab == null || markOPrefab == null)
+        if (cellPrefab == null || horizontalLinePrefab == null || verticalLinePrefab == null ||
+            markXPrefab == null || markOPrefab == null || glowMaterial == null)
         {
-            Debug.LogError("One or more prefabs not found. Check paths.");
+            Debug.LogError("One or more prefabs or material not found. Check paths.");
             return;
         }
 
-        int n = GatoTacToeConfig.gridSize;
-        float U = GatoTacToeConfig.baseUnit;
-        float phi = GatoTacToeConfig.metallicRatio;
+        // ----- 3. Apply theme to mark prefabs (so new instances have correct colours) -----
+        ApplyThemeToMarkPrefab(markXPrefab, 
+            Theme.markXVertex, 
+            Theme.markXOutline, 
+            Theme.markXGlow);
+        ApplyThemeToMarkPrefab(markOPrefab, 
+            Theme.markOVertex, 
+            Theme.markOOutline, 
+            Theme.markOGlow);
+
+        // ----- 4. Board dimensions -----
+        float U = baseUnit;
+        float phi = metallicRatio;
         float cellSize = U * phi;
         float gap = U / 4f;
-        float boardSize = (cellSize + gap) * n - gap;
+        float boardSize = (cellSize + gap) * gridSize - gap;
 
-        // BoardContainer
+        // ----- 5. BoardContainer -----
         GameObject boardContainer = new GameObject("BoardContainer", typeof(RectTransform));
         boardContainer.transform.SetParent(canvas.transform, false);
         RectTransform boardRect = boardContainer.GetComponent<RectTransform>();
@@ -41,7 +77,7 @@ public class GatoTacToeBoardBuilder
         boardRect.sizeDelta = new Vector2(boardSize, boardSize);
         boardRect.anchoredPosition = Vector2.zero;
 
-        // CellsContainer (with GridLayoutGroup)
+        // ----- 6. CellsContainer with GridLayoutGroup -----
         GameObject cellsContainer = new GameObject("CellsContainer", typeof(RectTransform));
         cellsContainer.transform.SetParent(boardContainer.transform, false);
         RectTransform cellsRect = cellsContainer.GetComponent<RectTransform>();
@@ -53,16 +89,24 @@ public class GatoTacToeBoardBuilder
         grid.cellSize = new Vector2(cellSize, cellSize);
         grid.spacing = new Vector2(gap, gap);
         grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-        grid.constraintCount = n;
+        grid.constraintCount = gridSize;
         grid.childAlignment = TextAnchor.MiddleCenter;
 
-        for (int i = 0; i < n * n; i++)
+        for (int i = 0; i < gridSize * gridSize; i++)
         {
             GameObject cell = (GameObject)PrefabUtility.InstantiatePrefab(cellPrefab, cellsContainer.transform);
             cell.name = $"Cell_{i}";
+            Button btn = cell.GetComponent<Button>();
+            if (btn != null)
+            {
+                ColorBlock colors = btn.colors;
+                colors.highlightedColor = Theme.cellHighlighted;
+                colors.pressedColor = Theme.cellPressed;
+                btn.colors = colors;
+            }
         }
 
-        // LinesContainer
+        // ----- 7. LinesContainer (using line prefabs with glow material AND image colour) -----
         GameObject linesContainer = new GameObject("LinesContainer", typeof(RectTransform));
         linesContainer.transform.SetParent(boardContainer.transform, false);
         RectTransform linesRect = linesContainer.GetComponent<RectTransform>();
@@ -70,31 +114,81 @@ public class GatoTacToeBoardBuilder
         linesRect.anchorMax = Vector2.one;
         linesRect.offsetMin = linesRect.offsetMax = Vector2.zero;
 
-        for (int i = 1; i < n; i++)
+        // IMPORTANT: Change "_Color" to match your material's HDR colour property name.
+        // Select GlowLine_Material in Project view and check the label next to the colour picker.
+        string colorPropertyName = "_Color"; // e.g., "_GlowColor", "_EmissionColor"
+
+        for (int i = 1; i < gridSize; i++)
         {
-            float t = i / (float)n;
+            float t = i / (float)gridSize;
 
             // Horizontal line
-            GameObject hLine = new GameObject($"HLine_{i}", typeof(RectTransform), typeof(Image));
-            hLine.transform.SetParent(linesContainer.transform, false);
+            GameObject hLine = (GameObject)PrefabUtility.InstantiatePrefab(horizontalLinePrefab, linesContainer.transform);
+            hLine.name = $"HLine_{i}";
             RectTransform hRect = hLine.GetComponent<RectTransform>();
             hRect.anchorMin = new Vector2(0, t);
             hRect.anchorMax = new Vector2(1, t);
             hRect.offsetMin = new Vector2(0, -gap/2);
             hRect.offsetMax = new Vector2(0, gap/2);
-            hLine.GetComponent<Image>().color = GatoTacToeConfig.lineColor;
+            
+            Image hImg = hLine.GetComponent<Image>();
+            if (hImg != null)
+            {
+                // Assign a unique material instance so we can change its colour without affecting other lines
+                Material mat = new Material(glowMaterial);
+                hImg.material = mat;
+                mat.SetColor(colorPropertyName, Theme.glowLineMaterialColor);
+                // Also set the image colour (this gives the exact combined look you want)
+                hImg.color = Theme.lineColor;
+            }
 
             // Vertical line
-            GameObject vLine = new GameObject($"VLine_{i}", typeof(RectTransform), typeof(Image));
-            vLine.transform.SetParent(linesContainer.transform, false);
+            GameObject vLine = (GameObject)PrefabUtility.InstantiatePrefab(verticalLinePrefab, linesContainer.transform);
+            vLine.name = $"VLine_{i}";
             RectTransform vRect = vLine.GetComponent<RectTransform>();
             vRect.anchorMin = new Vector2(t, 0);
             vRect.anchorMax = new Vector2(t, 1);
             vRect.offsetMin = new Vector2(-gap/2, 0);
             vRect.offsetMax = new Vector2(gap/2, 0);
-            vLine.GetComponent<Image>().color = GatoTacToeConfig.lineColor;
+            
+            Image vImg = vLine.GetComponent<Image>();
+            if (vImg != null)
+            {
+                Material mat = new Material(glowMaterial);
+                vImg.material = mat;
+                mat.SetColor(colorPropertyName, Theme.glowLineMaterialColor);
+                vImg.color = Theme.lineColor;
+            }
         }
 
-        Debug.Log($"Board built: {n}x{n}, cell size = {cellSize}, board size = {boardSize}");
+        // Save changes to the mark prefabs
+        AssetDatabase.SaveAssets();
+        Debug.Log("Board built and theme applied to mark prefabs.");
+    }
+
+    // Helper: apply theme colours to a mark prefab (TextMeshPro, Outline, and glow image)
+    private static void ApplyThemeToMarkPrefab(GameObject prefab, Color vertexColor, Color outlineColor, Color glowColor)
+    {
+        // TextMeshPro component (on root or child)
+        TextMeshProUGUI tmp = prefab.GetComponent<TextMeshProUGUI>();
+        if (tmp == null) tmp = prefab.GetComponentInChildren<TextMeshProUGUI>();
+        if (tmp != null) tmp.color = vertexColor;
+        else Debug.LogWarning($"No TextMeshProUGUI found on {prefab.name}");
+
+        // Outline component (if any)
+        Outline outline = prefab.GetComponent<Outline>();
+        if (outline == null) outline = prefab.GetComponentInChildren<Outline>();
+        if (outline != null) outline.effectColor = outlineColor;
+
+        // Glow image (optional – if the prefab has an Image with a glow material)
+        Image glowImage = prefab.GetComponent<Image>();
+        if (glowImage == null) glowImage = prefab.GetComponentInChildren<Image>();
+        if (glowImage != null && glowImage.material != null)
+        {
+            // The property name for the glow image's colour might be "_Color" – change if different
+            glowImage.material.SetColor("_Color", glowColor);
+        }
+
+        EditorUtility.SetDirty(prefab);
     }
 }

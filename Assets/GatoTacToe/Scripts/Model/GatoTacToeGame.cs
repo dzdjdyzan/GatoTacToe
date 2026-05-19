@@ -5,7 +5,7 @@ namespace GatoTacToe.Model
 {
     public enum GameState { ONGOING, PLAYER1_WINS, PLAYER2_WINS, DRAW }
 
-    public class TicTacToeGame
+    public class GatoTacToeGame
     {
         private readonly int gridSize;
         private int[] grid;
@@ -15,7 +15,7 @@ namespace GatoTacToe.Model
         private float totalTimePlayer1, totalTimePlayer2;
         public GameState CurrentState { get; private set; }
 
-        public TicTacToeGame(int size)
+        public GatoTacToeGame(int size)
         {
             gridSize = size;
             grid = new int[size * size];
@@ -110,6 +110,12 @@ namespace GatoTacToe.Model
             return GameState.ONGOING;
         }
 
+        public float GetCurrentTurnElapsed(float now)
+        {
+            if (CurrentState != GameState.ONGOING) return 0f;
+            return now - turnStartTime;
+        }
+        
         public float GetPlayer1TotalTime() => totalTimePlayer1;
         public float GetPlayer2TotalTime() => totalTimePlayer2;
         public int GetPlayer1MoveCount() => moveQueue.Count == 0 ? 0 : (moveQueue.Count + 1) / 2;
