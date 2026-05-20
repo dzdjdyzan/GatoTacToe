@@ -8,6 +8,7 @@ public class BoardView : MonoBehaviour
     [Header("Mark Prefabs (assign in Inspector)")]
     public GameObject markXPrefab;
     public GameObject markOPrefab;
+    public Transform cellsContainer;
 
     private Button[] cells;
     private System.Action<int> onCellClickCallback;
@@ -60,6 +61,17 @@ public class BoardView : MonoBehaviour
 
         // Disable the button so it cannot be clicked again
         cells[cellIndex].interactable = false;
+    }
+
+    public void AnimateCell(int cellIndex)
+    {
+        Transform cell = cellsContainer.transform.GetChild(cellIndex);
+        // DOTween example
+        cell.DOScale(1.2f, 0.2f).SetEase(Ease.OutBack).OnComplete(() =>
+        {
+            cell.DOScale(1f, 0.2f);
+        });
+
     }
 
     public void ResetBoard()

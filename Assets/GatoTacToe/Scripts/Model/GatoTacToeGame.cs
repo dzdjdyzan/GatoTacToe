@@ -110,12 +110,84 @@ namespace GatoTacToe.Model
             return GameState.ONGOING;
         }
 
+        public int[] GetWinningLine()
+        {
+            if (CurrentState != GameState.PLAYER1_WINS && CurrentState != GameState.PLAYER2_WINS)
+                return null;
+
+            int n = gridSize;
+            // Check all possible lines
+            // Rows
+            for (int row = 0; row < n; row++)
+            {
+                int first = grid[row * n];
+                if (first != 0)
+                {
+                    bool win = true;
+                    for (int col = 1; col < n; col++)
+                        if (grid[row * n + col] != first) { win = false; break; }
+                    if (win)
+                    {
+                        int[] line = new int[n];
+                        for (int col = 0; col < n; col++) line[col] = row * n + col;
+                        return line;
+                    }
+                }
+            }
+            // Columns
+            for (int col = 0; col < n; col++)
+            {
+                int first = grid[col];
+                if (first != 0)
+                {
+                    bool win = true;
+                    for (int row = 1; row < n; row++)
+                        if (grid[row * n + col] != first) { win = false; break; }
+                    if (win)
+                    {
+                        int[] line = new int[n];
+                        for (int row = 0; row < n; row++) line[row] = row * n + col;
+                        return line;
+                    }
+                }
+            }
+            // Main diagonal
+            int mainFirst = grid[0];
+            if (mainFirst != 0)
+            {
+                bool win = true;
+                for (int i = 1; i < n; i++)
+                    if (grid[i * n + i] != mainFirst) { win = false; break; }
+                if (win)
+                {
+                    int[] line = new int[n];
+                    for (int i = 0; i < n; i++) line[i] = i * n + i;
+                    return line;
+                }
+            }
+            // Anti-diagonal
+            int antiFirst = grid[n - 1];
+            if (antiFirst != 0)
+            {
+                bool win = true;
+                for (int i = 1; i < n; i++)
+                    if (grid[i * n + (n - 1 - i)] != antiFirst) { win = false; break; }
+                if (win)
+                {
+                    int[] line = new int[n];
+                    for (int i = 0; i < n; i++) line[i] = i * n + (n - 1 - i);
+                    return line;
+                }
+            }
+            return null;
+        }
+
         public float GetCurrentTurnElapsed(float now)
         {
             if (CurrentState != GameState.ONGOING) return 0f;
             return now - turnStartTime;
         }
-        
+
         public float GetPlayer1TotalTime() => totalTimePlayer1;
         public float GetPlayer2TotalTime() => totalTimePlayer2;
         public int GetPlayer1MoveCount() => moveQueue.Count == 0 ? 0 : (moveQueue.Count + 1) / 2;

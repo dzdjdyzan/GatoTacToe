@@ -1,10 +1,16 @@
 using UnityEngine;
-using GatoTacToe.Model; // your model namespace
+using UnityEngine.UI;
+using TMPro;
+using GatoTacToe.Model;
 
 public class GatoTacToeController : MonoBehaviour  
 {
-     public BoardView boardView; // assign in Inspector
+    public BoardView boardView; // assign in Inspector
+    public GameObject gameOverPopup;          // assign in Inspector
+    public TextMeshProUGUI gameOverText;
     private GatoTacToeGame gameModel;
+    public Button retryButton;   // add this
+    public Button exitButton;    // add this
     private float gameStartTime;
 
     void Awake()
@@ -16,10 +22,16 @@ public class GatoTacToeController : MonoBehaviour
     {
         boardView.SetClickCallback(OnCellClicked);
         StartNewGame();
+
+        retryButton.onClick.AddListener(OnRetryClicked);
+        exitButton.onClick.AddListener(OnExitClicked);
+
+        gameOverPopup.SetActive(false);
     }
 
     void StartNewGame()
     {
+        gameOverPopup.SetActive(false);
         gameModel.ResetGame();
         boardView.ResetBoard();
         gameStartTime = Time.realtimeSinceStartup;
@@ -38,7 +50,7 @@ public class GatoTacToeController : MonoBehaviour
         if (newState != GameState.ONGOING)
         {
             // Game ended
-            string result = "";
+            /*string result = "";
             if (newState == GameState.PLAYER1_WINS) result = "PLAYER 1 WON";
             else if (newState == GameState.PLAYER2_WINS) result = "PLAYER 2 WON";
             else result = "DRAW";
@@ -46,8 +58,59 @@ public class GatoTacToeController : MonoBehaviour
             Debug.Log(result);
 
             // Auto-restart after 2 seconds
-            Invoke(nameof(StartNewGame), 2f);
+            Invoke(nameof(StartNewGame), 2f);*/
+            HandleGameEnd(newState);
         }
+    }
+
+    void HandleGameEnd(GameState result)
+    {
+        // Show winning animation on the line if applicable
+        if (result == GameState.PLAYER1_WINS || result == GameState.PLAYER2_WINS)
+        {
+            int[] winningLine = gameModel.GetWinningLine();
+            if (winningLine != null)
+            {
+                // Animate each winning cell
+                foreach (int index in winningLine)
+                {
+                    boardView.AnimateCell(index);
+                }
+            }
+        }
+
+        // Display popup after a short delay (let animation play)
+        float delay = 0.5f; // adjust to match your animation duration
+        Invoke(nameof(ShowGameOverPopup), delay);
+    }
+
+    void ShowGameOverPopup()
+    {
+        string winnerText;
+        if (gameModel.CurrentState == GameState.PLAYER1_WINS)
+            winnerText = "PLAYER X WON";
+        else if (gameModel.CurrentState == GameState.PLAYER2_WINS)
+            winnerText = "PLAYER O WON";
+        else
+            winnerText = "DRAW";
+
+        gameOverText.text = winnerText;
+        gameOverPopup.SetActive(true);
+    }
+
+    void OnRetryClicked()
+    {
+        StartNewGame();
+    }
+
+    void OnExitClicked()
+    {
+        gameOverPopup.SetActive(false);
+        #if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+        #else
+        Application.Quit();
+        #endif
     }
 
     public GatoTacToeGame GetGame() => gameModel;
