@@ -42,6 +42,8 @@ public class BoardView : MonoBehaviour
 
     public void PlaceMark(int cellIndex, int player)
     {
+        AudioManager.Instance.PlayPlacement();
+
         Transform cell = cells[cellIndex].transform;
         GameObject markPrefab = (player == 1) ? markXPrefab : markOPrefab;
         GameObject mark = Instantiate(markPrefab, cell);
@@ -67,7 +69,7 @@ public class BoardView : MonoBehaviour
     {
         Transform cell = cellsContainer.transform.GetChild(cellIndex);
         // DOTween example
-        cell.DOScale(1.2f, 0.2f).SetEase(Ease.OutBack).OnComplete(() =>
+        cell.DOScale(1.7f, 0.2f).SetEase(Ease.OutBack).OnComplete(() =>
         {
             cell.DOScale(1f, 0.2f);
         });

@@ -10,13 +10,12 @@ namespace GatoTacToe.Persistence
         public int player1Wins = 0;
         public int player2Wins = 0;
         public int draws = 0;
-        public float totalGameTimeSeconds = 0f;     // sum of all game durations
+        public float totalGameTimeSeconds = 0f;
         public float totalPlayer1TimeSeconds = 0f;
         public float totalPlayer2TimeSeconds = 0f;
         public int totalPlayer1Moves = 0;
         public int totalPlayer2Moves = 0;
 
-        // Computed averages (read-only)
         public float AverageGameTime => totalGamesPlayed > 0 ? totalGameTimeSeconds / totalGamesPlayed : 0f;
         public float AveragePlayer1TimePerGame => totalGamesPlayed > 0 ? totalPlayer1TimeSeconds / totalGamesPlayed : 0f;
         public float AveragePlayer2TimePerGame => totalGamesPlayed > 0 ? totalPlayer2TimeSeconds / totalGamesPlayed : 0f;
@@ -29,7 +28,12 @@ namespace GatoTacToe.Persistence
         private const string STATS_KEY = "GatoTacToeStats";
         public static GameStatistics Stats { get; private set; }
 
-        [RuntimeInitializeOnLoadMethod]
+        // Static constructor – guarantees LoadStats runs before first access
+        static StatsManager()
+        {
+            LoadStats();
+        }
+
         private static void LoadStats()
         {
             string json = PlayerPrefs.GetString(STATS_KEY, "");
@@ -48,15 +52,12 @@ namespace GatoTacToe.Persistence
         {
             string json = JsonUtility.ToJson(Stats);
             PlayerPrefs.SetString(STATS_KEY, json);
-            PlayerPrefs.Save();  // Immediately writes to disk (important for WebGL)
+            PlayerPrefs.Save();
         }
 
-        /// <summary>
-        /// Call this after a game finishes.
-        /// </summary>
         public static void RecordCompletedGame(GameState result, float gameDurationSeconds,
-                                            float player1Time, float player2Time,
-                                            int player1Moves, int player2Moves)
+                                               float player1Time, float player2Time,
+                                               int player1Moves, int player2Moves)
         {
             Stats.totalGamesPlayed++;
             Stats.totalGameTimeSeconds += gameDurationSeconds;
@@ -75,8 +76,4 @@ namespace GatoTacToe.Persistence
             SaveStats();
         }
     }
-
-
 }
-
-

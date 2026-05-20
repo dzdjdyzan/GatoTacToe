@@ -2,15 +2,27 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using GatoTacToe.Model;
+using GatoTacToe.Persistence;
 
 public class GatoTacToeController : MonoBehaviour  
 {
+    public GameObject startMenu;
+    public GameObject gameOverPopup; 
+    public GameObject statsPopup;
+    
     public BoardView boardView; // assign in Inspector
-    public GameObject gameOverPopup;          // assign in Inspector
-    public TextMeshProUGUI gameOverText;
-    private GatoTacToeGame gameModel;
-    public Button retryButton;   // add this
-    public Button exitButton;    // add this
+    private GatoTacToeGame gameModel; 
+   
+   
+    public TextMeshProUGUI gameOverText; // assign in Inspector
+    // assign in Inspector
+    
+    public Button retryButton;   // assign in Inspector
+    public Button playButton;
+    public Button abortButton;
+    public Button statsButton;
+    public Button statsBackButton;
+
     private float gameStartTime;
 
     void Awake()
@@ -21,12 +33,17 @@ public class GatoTacToeController : MonoBehaviour
     void Start()
     {
         boardView.SetClickCallback(OnCellClicked);
-        StartNewGame();
+        //StartNewGame();
 
         retryButton.onClick.AddListener(OnRetryClicked);
-        exitButton.onClick.AddListener(OnExitClicked);
-
+        playButton.onClick.AddListener(OnPlayClicked);
+        abortButton.onClick.AddListener(OnAbortClicked);
+        statsButton.onClick.AddListener(OnStatsClicked);
+        statsBackButton.onClick.AddListener(OnStatsBackClicked);
+        
         gameOverPopup.SetActive(false);
+        startMenu.SetActive(true);
+
     }
 
     void StartNewGame()
@@ -35,6 +52,22 @@ public class GatoTacToeController : MonoBehaviour
         gameModel.ResetGame();
         boardView.ResetBoard();
         gameStartTime = Time.realtimeSinceStartup;
+    }
+
+    public void OnPlayClicked()
+    {
+        startMenu.SetActive(false);
+        StartNewGame(); // resets model, board, timers, game over popup
+    }
+
+    public void OnStatsClicked()
+    {
+        statsPopup.SetActive(true);
+    }
+
+    public void OnStatsBackClicked()
+    {
+        statsPopup.SetActive(false);
     }
 
     void OnCellClicked(int cellIndex)
@@ -65,6 +98,15 @@ public class GatoTacToeController : MonoBehaviour
 
     void HandleGameEnd(GameState result)
     {
+        float now = Time.realtimeSinceStartup;
+        float gameDuration = now - gameStartTime;
+        float p1Time = gameModel.GetPlayer1TotalTime() + (gameModel.IsPlayer1Turn ? gameModel.GetCurrentTurnElapsed(now) : 0);
+        float p2Time = gameModel.GetPlayer2TotalTime() + (!gameModel.IsPlayer1Turn ? gameModel.GetCurrentTurnElapsed(now) : 0);
+        int p1Moves = gameModel.GetPlayer1MoveCount();
+        int p2Moves = gameModel.GetPlayer2MoveCount();
+
+        StatsManager.RecordCompletedGame(result, gameDuration, p1Time, p2Time, p1Moves, p2Moves);
+
         // Show winning animation on the line if applicable
         if (result == GameState.PLAYER1_WINS || result == GameState.PLAYER2_WINS)
         {
@@ -77,6 +119,8 @@ public class GatoTacToeController : MonoBehaviour
                     boardView.AnimateCell(index);
                 }
             }
+
+            AudioManager.Instance.PlayStrikeWin();
         }
 
         // Display popup after a short delay (let animation play)
@@ -86,6 +130,7 @@ public class GatoTacToeController : MonoBehaviour
 
     void ShowGameOverPopup()
     {
+        AudioManager.Instance.PlayPopupAnim();
         string winnerText;
         if (gameModel.CurrentState == GameState.PLAYER1_WINS)
             winnerText = "PLAYER X WON";
@@ -103,7 +148,7 @@ public class GatoTacToeController : MonoBehaviour
         StartNewGame();
     }
 
-    void OnExitClicked()
+    /*void OnExitClicked()
     {
         gameOverPopup.SetActive(false);
         #if UNITY_EDITOR
@@ -111,6 +156,29 @@ public class GatoTacToeController : MonoBehaviour
         #else
         Application.Quit();
         #endif
+    }*/
+
+    public void OnAbortClicked()
+    {
+        AbortGame();
+    }
+
+    public void AbortGame()
+    {
+        // Cancel any pending Invoke (e.g., ShowGameOverPopup)
+        CancelInvoke();
+        
+        // Reset the game model (clears board, times, turn)
+        gameModel.ResetGame();
+        
+        // Reset the visual board (clear marks, re‑enable buttons)
+        boardView.ResetBoard();
+        
+        // Hide game over popup if it's visible
+        gameOverPopup.SetActive(false);
+        
+        // Show the main menu
+        startMenu.SetActive(true);
     }
 
     public GatoTacToeGame GetGame() => gameModel;
