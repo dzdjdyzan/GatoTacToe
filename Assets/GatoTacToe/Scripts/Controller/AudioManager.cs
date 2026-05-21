@@ -33,13 +33,11 @@ public class AudioManager : MonoBehaviour
 
     void Start()
     {
-        Debug.Log("AudioManager Start running");
         bgmEnabled = PlayerPrefs.GetInt("BGMEnabled", 1) == 1;
         sfxEnabled = PlayerPrefs.GetInt("SFXEnabled", 1) == 1;
         ApplySettings();
         if (bgmEnabled && bgmSource != null && !bgmSource.isPlaying)
         {
-            Debug.Log("Attempting to play BGM, clip = " + (bgmSource.clip ? bgmSource.clip.name : "NULL"));
             bgmSource.Play();
         }
         else

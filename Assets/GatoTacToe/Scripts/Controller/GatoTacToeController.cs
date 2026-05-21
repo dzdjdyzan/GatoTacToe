@@ -10,14 +10,14 @@ public class GatoTacToeController : MonoBehaviour
     public GameObject gameOverPopup; 
     public GameObject statsPopup;
     
-    public BoardView boardView; // assign in Inspector
+    public BoardView boardView; 
     private GatoTacToeGame gameModel; 
    
    
-    public TextMeshProUGUI gameOverText; // assign in Inspector
+    public TextMeshProUGUI gameOverText; 
     // assign in Inspector
     
-    public Button retryButton;   // assign in Inspector
+    public Button retryButton;   
     public Button playButton;
     public Button abortButton;
     public Button statsButton;
@@ -33,7 +33,6 @@ public class GatoTacToeController : MonoBehaviour
     void Start()
     {
         boardView.SetClickCallback(OnCellClicked);
-        //StartNewGame();
 
         retryButton.onClick.AddListener(OnRetryClicked);
         playButton.onClick.AddListener(OnPlayClicked);
@@ -148,15 +147,14 @@ public class GatoTacToeController : MonoBehaviour
         StartNewGame();
     }
 
-    /*void OnExitClicked()
+    public void OnExitClicked()
     {
-        gameOverPopup.SetActive(false);
         #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
         #else
         Application.Quit();
         #endif
-    }*/
+    }
 
     public void OnAbortClicked()
     {

@@ -18,13 +18,11 @@ public class GatoTacToeGameUIManager : MonoBehaviour
 
     void Start()
     {
-        Debug.Log("GameUIManager Start() called");
+        
         var controller = FindAnyObjectByType<GatoTacToeController>();
-        Debug.Log("Controller found: " + (controller != null));
         if (controller != null)
         {
             game = controller.GetGame();
-            Debug.Log("Game instance obtained: " + (game != null));
         }
         else
         {
@@ -40,7 +38,7 @@ public class GatoTacToeGameUIManager : MonoBehaviour
 
     void RefreshDisplay()
     {
-        //Debug.Log("RefreshDisplay called, game is " + (game == null ? "NULL" : "not null"));
+
         if (game == null) return;
 
         float now = Time.realtimeSinceStartup;
@@ -50,8 +48,8 @@ public class GatoTacToeGameUIManager : MonoBehaviour
         float p2Elapsed = game.GetPlayer2TotalTime() + (!game.IsPlayer1Turn ? ongoing : 0);
         float totalElapsed = p1Elapsed + p2Elapsed;
 
-        player1TimerText.text = $"X Time\n{FormatTime(p1Elapsed)}";
-        player2TimerText.text = $"O Time\n{FormatTime(p2Elapsed)}";
+        player1TimerText.text = $"X TIME\n{FormatTime(p1Elapsed)}";
+        player2TimerText.text = $"O TIME\n{FormatTime(p2Elapsed)}";
         totalTimerText.text = $"{FormatTotalTime(totalElapsed)}";
 
         // --- Turn counts ---
